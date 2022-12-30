@@ -16,13 +16,14 @@ window          = pygame.display.set_mode((window_width,window_height))
 clock           = pygame.time.Clock()
 box_width       = window_width // n
 box_height      = window_height // n
-G               = nx.grid_2d_graph(n,n)
 
-# set start and goal nodes position
+# set start position
 start_pos       = (1, 1)
 start_idx       = start_pos[0]*n+start_pos[1]+1
 
-# Set Node index from 1
+## Construct 8-connected grid graph
+G               = nx.grid_2d_graph(n,n)
+# Node Initialization
 idx     = 1
 for node in G.nodes:
     G.nodes[node]['idx']    = idx
@@ -93,12 +94,12 @@ def main():
                 # Define obstacles using the left mouse button
                 if event.buttons[0]:
                     obs_idx     = i*n+j+1
-                    if obs_idx not in obs_list:
-                        obs_node = [n for n,v in G.nodes(data=True) if v['idx'] == obs_idx]
+                    obs_node = [n for n,v in G.nodes(data=True) if v['idx'] == obs_idx]
+                    if obs_node[0] not in obs_list:
                         obs_list.append(*obs_node)
                 # Set and draw Goal
                 if event.buttons[2] and not set_goal:
-                    goal_pos    = (x, y)
+                    goal_pos    = (j, i)
                     goal_idx    = i*n+j+1
                     goal_node   = [n for n,v in G.nodes(data=True) if v['idx'] == goal_idx]
                     goal_node   = goal_node[0]
@@ -127,15 +128,16 @@ def main():
                         new_g       = G.nodes[current_node]['g']+ G.get_edge_data(current_node,neighbor)['weight']
                         if not G.nodes[neighbor]['visited'] or current_g > new_g:
                             g           = new_g
-                            x_dis2goal  = int(neighbor[0])-int(goal_pos[0])
-                            y_dis2goal  = int(neighbor[1])-int(goal_pos[1])
-                            h           = np.linalg.norm((x_dis2goal,y_dis2goal), 2)                            
+                            y_dis2goal  = int(neighbor[1])-int(goal_pos[0])
+                            x_dis2goal  = int(neighbor[0])-int(goal_pos[1])
+                            h           = np.linalg.norm((x_dis2goal,y_dis2goal), 2)
                             f           = h+g
 
                             G.nodes[neighbor]['visited'] = True
                             G.nodes[neighbor]['parent'] = current_node
                             G.nodes[neighbor]['g'] = g
                             G.nodes[neighbor]['f'] = f
+                            G.nodes[neighbor]['h'] = h
                             Q.append(neighbor)
                             Q   = sorted(Q, key=lambda n: G.nodes[n]['f'])
             else:
